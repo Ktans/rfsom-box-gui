@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #https://serverfault.com/questions/126291/ubuntu-keyboard-detection-from-bash-script
 started=0
 for dev in /sys/bus/usb/devices/*-*:*
@@ -7,7 +7,7 @@ do
   then
     if [[ "$(cat $dev/bInterfaceClass)" == "03" && "$(cat $dev/bInterfaceProtocol)" == "01" ]]
     then
-	bterm -f /usr/share/fonts/truetype/droid/DroidSansMono.bgf /bin/bash < /dev/tty0;started=1
+	bterm -f /usr/share/fonts/truetype/droid/DroidSansMono.bgf /bin/bash < /dev/ttyPS0;started=1
     fi
   fi
 done

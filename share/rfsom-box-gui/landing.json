@@ -10,27 +10,27 @@
       "timer": 2,
       "cmd_read": "ip addr show eth0 | sed -n '3p' | awk '{ print $2 }' | cut -f 1 -d \"/\"",
       "iconSize": 16,
-      "icon": "../share/rfsom-box-gui/icons/003-plug-connector.png"
+      "icon": "/usr/share/rfsom-box-gui/icons/003-plug-connector.png"
     },
     {
       "description": "",
       "timer": 2,
-      "cmd_read": "echo \"scale=2; ($(iio_attr -q -c ad7291-ccbox temp0 mean_raw) * 250) / 1000\" | bc",
+      "cmd_read": "echo \"scale=2; (($(iio_attr -q -c xadc temp0 raw) - 2219) * 123.040771484)/1000\" | bc",
       "iconSize": 12,
-      "icon": "../share/rfsom-box-gui/icons/006-weather.png"
+      "icon": "/usr/share/rfsom-box-gui/icons/006-weather.png"
     },
     {
       "description": "",
       "timer": 2,
-      "cmd_read": "cat /tmp/rfsom_batt_soc",
+      "cmd_read": "echo \"Not Implement!\"",
       "iconSize": 16,
-      "icon": "../share/rfsom-box-gui/icons/005-technology.png"
+      "icon": "/usr/share/rfsom-box-gui/icons/005-technology.png"
     },
     {
       "description": "",
-      "cmd_read": "cat test",
+      "cmd_read": "hostname",
       "iconSize": 12,
-      "icon": "../share/rfsom-box-gui/icons/004-computer.png"
+      "icon": "/usr/share/rfsom-box-gui/icons/004-computer.png"
     }
   ]
 }

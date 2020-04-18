@@ -2,6 +2,62 @@
   {
     "params": {
       "timers": [
+        10000,
+        1000
+      ],
+      "elements": [
+        {
+          "description": "RX Frequency (Hz)",
+          "type": "edit",
+          "subtype": "numeric",
+          "max_value": 110000000,
+          "min_value": 70000000,
+          "cmd_read": "if [ -s /tmp/fm_radio ]; then cat /tmp/fm_radio; else echo 95000000;fi",
+          "cmd_read_timer": "read_once",
+          "cmd_write": "echo $EDIT_VAL > /tmp/fm_radio"
+        },
+	{
+          "description": "Volume (%)",
+          "type": "edit",
+          "subtype": "numeric",
+          "max_value": 100,
+          "min_value": 0,
+          "cmd_read": "amixer sget 'Digital Output' | grep Mono | awk '$0~/%/{print $3}' | tr -d '[%]'",
+          "cmd_read_timer": 0,
+          "cmd_write": "amixer sset 'Digital Output' $EDIT_VAL%"
+        },
+        {
+          "description": "RX Gain (dB)",
+          "type": "edit",
+          "subtype": "numeric",
+          "max_value": 77,
+          "min_value": 0,
+          "cmd_read": "if [ -s /tmp/fm_radio_gain ]; then cat /tmp/fm_radio_gain; else echo 10;fi",
+          "cmd_read_timer": "read_once",
+          "cmd_write": "echo $EDIT_VAL > /tmp/fm_radio_gain"
+        },
+        {
+          "description": "Status",
+          "type": "cmd_read",
+          "timer": 1,
+          "cmd": "cat /tmp/fm_radio_log | tail -1 | awk '{print $5,$6,$7}'"
+        },
+        {
+          "description": "Start/Stop",
+          "type": "btn",
+          "cmd": "/usr/sbin/fm_radio.sh",
+          "background_task": true,
+          "muted": false,
+          "stylesheet": ""
+        }
+      ]
+    },
+    "name": "FM Radio",
+    "type": "list"
+  },
+  {
+    "params": {
+      "timers": [
         1000,
         5000
       ],
@@ -9,7 +65,7 @@
         {
           "description": "Automatic DHCP Client",
           "type": "checkbox",
-          "cmd_write": "if [ \"$CHECKBOX_VAL\" -eq \"1\" ]; then /usr/local/bin/enable_dhcp.sh; else /usr/local/bin/enable_static_ip.sh; fi",
+          "cmd_write": "if [ \"$CHECKBOX_VAL\" -eq \"1\" ]; then /usr/sbin/enable_dhcp.sh; else /usr/sbin/enable_static_ip.sh; fi",
           "cmd_read": "grep -q 'iface eth0 inet static' /etc/network/interfaces && echo 0 || echo 1",
           "cmd_read_timer": "read_once"
         },
@@ -204,7 +260,7 @@
         {
           "description": "Calibrate XO GPS",
           "type": "btn",
-          "cmd": "/usr/local/bin/cal_ad9361 -a -g;err=$(echo $?);iio_attr -q -d ad9361-phy xo_correction > /usr/local/etc/rfsom-box-gui/radio-xo_correction;exit $err;",
+          "cmd": "/usr/sbin/cal_ad9361 -a -g;err=$(echo $?);iio_attr -q -d ad9361-phy xo_correction > /usr/local/etc/rfsom-box-gui/radio-xo_correction;exit $err;",
           "background_task": true,
           "muted": false,
           "stylesheet": ""
@@ -212,7 +268,7 @@
         {
           "description": "Calibrate XO IP",
           "type": "btn",
-          "cmd": "/usr/local/bin/send_tone.sh",
+          "cmd": "/usr/sbin/send_tone.sh",
           "background_task": true,
           "muted": false,
           "stylesheet": ""
@@ -246,7 +302,7 @@
         {
           "description": "Restart",
           "type": "btn",
-          "cmd": "/usr/local/bin/restart_modem_gui.sh >/tmp/modem.log 2>&1",
+          "cmd": "/usr/sbin/restart_modem_gui.sh >/tmp/modem.log 2>&1",
           "background_task": true,
           "stylesheet": ""
         },
@@ -264,7 +320,7 @@
         {
           "description": "Send Buffer",
           "type": "btn",
-          "cmd": "/usr/local/bin/start_buffer_stream.sh > /tmp/modem.log 2>&1",
+          "cmd": "/usr/sbin/start_buffer_stream.sh > /tmp/modem.log 2>&1",
           "background_task": true,
           "stylesheet": ""
         },
@@ -340,35 +396,6 @@
   },
   {
     "params": {
-      "cmd": "sh /usr/local/bin/testmode.sh"
-    },
-    "type": "video",
-    "name": "Testmode",
-    "hang_on_finish": true
-  },
-  {
-    "params": {
-      "cmd": "sh /usr/local/bin/camera_view.sh"
-    },
-    "type": "video",
-    "name": "Camera View"
-  },
-  {
-    "params": {
-      "cmd": "/usr/local/bin/start_stream.sh"
-    },
-    "type": "video",
-    "name": "Send Video"
-  },
-  {
-    "params": {
-      "cmd": "sh /usr/local/bin/recv_stream.sh"
-    },
-    "type": "video",
-    "name": "Recv Video"
-  },
-  {
-    "params": {
       "timers": [
         10000,
         1000
@@ -377,7 +404,7 @@
         {
           "description": "On/Off",
           "type": "checkbox",
-          "cmd_write": "echo $CHECKBOX_VAL > /tmp/enc-onoff;/usr/local/bin/enc-onoff.sh",
+          "cmd_write": "echo $CHECKBOX_VAL > /tmp/enc-onoff;/usr/sbin/enc-onoff.sh",
           "cmd_read": "cat /tmp/enc-onoff",
           "cmd_read_timer": 0
         }
@@ -388,7 +415,7 @@
   },
   {
     "params": {
-      "cmd": "sh /usr/local/bin/start_plot.sh",
+      "cmd": "sh /usr/sbin/start_plot.sh",
       "console": true,
       "scroll_console": false,
       "input_map": {
@@ -412,15 +439,15 @@
           "subtype": "numeric",
           "max_value": 100,
           "min_value": 0,
-          "cmd_read": "amixer sget Headphone | grep Left | awk '$0~/%/{print $5}' | tr -d '[%]'",
+          "cmd_read": "amixer sget 'Digital Output' | grep Mono | awk '$0~/%/{print $3}' | tr -d '[%]'",
           "cmd_read_timer": 0,
-          "cmd_write": "amixer sset Headphone $EDIT_VAL%"
+          "cmd_write": "amixer sset 'Digital Output' $EDIT_VAL%"
         },
         {
           "description": "Headphone Mute",
           "type": "checkbox",
-          "cmd_write": "amixer sset Headphone toggle > /dev/null",
-          "cmd_read": "amixer sget 'Headphone' | grep -q '\\[off\\]' && echo 1 || echo 0",
+          "cmd_write": "amixer sset 'Soft Mute Control' toggle > /dev/null",
+          "cmd_read": "amixer sget 'Soft Mute Control' | grep -q '\\[off\\]' && echo 1 || echo 0",
           "cmd_read_timer": 0
         },
         {
@@ -454,12 +481,6 @@
       ],
       "elements": [
         {
-          "description": "PMC Temperature (°C)",
-          "type": "cmd_read",
-          "timer": 2,
-          "cmd": "echo \"scale=2; ($(iio_attr -q -c ad7291-ccbox temp0 mean_raw) * 250) / 1000\" | bc"
-        },
-        {
           "description": "ARM Temperature (°C)",
           "type": "cmd_read",
           "timer": 2,
@@ -470,12 +491,6 @@
           "type": "cmd_read",
           "timer": 2,
           "cmd": "echo \"scale=2; $(iio_attr -q -c ad9361-phy temp0 input) / 1000\" | bc"
-        },
-        {
-          "description": "IMU Temperature (°C)",
-          "type": "cmd_read",
-          "timer": 2,
-          "cmd": "echo \"scale=2; (($(iio_attr -q -c adis16460 temp0 raw) + 500) * 50)/1000\" | bc"
         }
       ]
     },
@@ -485,126 +500,12 @@
   {
     "params": {
       "timers": [
-        1000
-      ],
-      "elements": [
-        {
-          "description": "Power Supply Source",
-          "type": "cmd_read",
-          "timer": 0,
-          "cmd": "/usr/local/bin/read_pss -text"
-        },
-        {
-          "description": "Charger Status",
-          "type": "cmd_read",
-          "timer": 0,
-          "cmd": "cat /tmp/rfsom_batt_mode"
-        },
-        {
-          "description": "Battery SoC (voltage)",
-          "type": "cmd_read",
-          "timer": 0,
-          "cmd": "cat /tmp/rfsom_batt_soc"
-        },
-        {
-          "description": "Battery SoC (charge)",
-          "type": "cmd_read",
-          "timer": 0,
-          "cmd": "echo \"scale=0;p=`cat /sys/class/power_supply/ltc2942/charge_now` / 32000; if (p > 100) 100 else if (p < 0) 0 else p\" | bc"
-        },
-        {
-          "description": "Battery Volatge (V)",
-          "type": "cmd_read",
-          "timer": 0,
-          "cmd": "echo \"scale=3; `cat /sys/class/power_supply/ltc2942/voltage_now` / 1000000\" | bc"
-        },
-        {
-          "description": "Charge (Ah)",
-          "type": "cmd_read",
-          "timer": 0,
-          "cmd": "echo \"scale=3; `cat /sys/class/power_supply/ltc2942/charge_counter` / 1000000\" | bc"
-        },
-        {
-          "description": "Charge Now (Ah)",
-          "type": "cmd_read",
-          "timer": 0,
-          "cmd": "echo \"scale=3; `cat /sys/class/power_supply/ltc2942/charge_now` / 1000000\" | bc"
-        },
-        {
-          "description": "Temperature (°C)",
-          "type": "cmd_read",
-          "timer": 0,
-          "cmd": "echo \"scale=1; `cat /sys/class/power_supply/ltc2942/temp` / 100\" | bc"
-        }
-      ]
-    },
-    "type": "list",
-    "name": "Charge"
-  },
-  {
-    "params": {
-      "timers": [
-        100,
-        500,
-        1000
-      ],
-      "elements": [
-        {
-          "description": "Temperature (°C)",
-          "type": "cmd_read",
-          "timer": 2,
-          "cmd": "echo \"scale=2; (($(iio_attr -q -c adis16460 temp0 raw) + 500) * 50)/1000\" | bc"
-        },
-        {
-          "description": "Acceleration X (m/s²)",
-          "type": "cmd_read",
-          "timer": 1,
-          "cmd": "echo \"scale=2; $(iio_attr -q -c adis16460 accel_x raw) * 0.000000037/1\" | bc"
-        },
-        {
-          "description": "Acceleration Y (m/s²)",
-          "type": "cmd_read",
-          "timer": 1,
-          "cmd": "echo \"scale=2; $(iio_attr -q -c adis16460 accel_y raw) * 0.000000037/1\" | bc"
-        },
-        {
-          "description": "Acceleration Z (m/s²)",
-          "type": "cmd_read",
-          "timer": 1,
-          "cmd": "echo \"scale=2; $(iio_attr -q -c adis16460 accel_z raw) * 0.000000037/1\" | bc"
-        },
-        {
-          "description": "Angular Velocity X (rad/s)",
-          "type": "cmd_read",
-          "timer": 1,
-          "cmd": "echo \"scale=4; $(iio_attr -q -c adis16460 anglvel_x raw) * 0.000000001/1\" | bc"
-        },
-        {
-          "description": "Angular Velocity Y (rad/s)",
-          "type": "cmd_read",
-          "timer": 1,
-          "cmd": "echo \"scale=4; $(iio_attr -q -c adis16460 anglvel_y raw) * 0.000000001/1\" | bc"
-        },
-        {
-          "description": "Angular Velocity Z (rad/s)",
-          "type": "cmd_read",
-          "timer": 1,
-          "cmd": "echo \"scale=4; $(iio_attr -q -c adis16460 anglvel_z raw) * 0.000000001/1\" | bc"
-        }
-      ]
-    },
-    "type": "list",
-    "name": "IMU"
-  },
-  {
-    "params": {
-      "timers": [
         1000,
         5000
       ],
       "tasks": [
         {
-          "cmd": "/usr/local/bin/gps_get_coords.sh -q",
+          "cmd": "/usr/sbin/gps_get_coords.sh -q",
           "muted": true,
           "timer": 1
         }
@@ -641,18 +542,10 @@
   },
   {
     "params": {
-      "cmd": "/usr/local/bin/get_gmap.sh"
+      "cmd": "/usr/sbin/get_gmap.sh"
     },
     "type": "video",
     "name": "GPS Map"
-  },
-  {
-    "params": {
-      "cmd": "bash /usr/local/bin/start_terminal.sh",
-      "post_cmd": "killall -9 bterm"
-    },
-    "type": "video",
-    "name": "Terminal"
   },
   {
     "params": {
@@ -674,43 +567,43 @@
           "description": "Timing Lock",
           "type": "cmd_read",
           "timer": 0,
-          "cmd": "/usr/local/bin/ip_reg -q -r 0"
+          "cmd": "/usr/sbin/ip_reg -q -r 0"
         },
         {
           "description": "Peaks detected",
           "type": "cmd_read",
           "timer": 0,
-          "cmd": "/usr/local/bin/ip_reg -q -r 1"
+          "cmd": "/usr/sbin/ip_reg -q -r 1"
         },
         {
           "description": "Frequency Lock",
           "type": "cmd_read",
           "timer": 0,
-          "cmd": "/usr/local/bin/ip_reg -q -r 2"
+          "cmd": "/usr/sbin/ip_reg -q -r 2"
         },
         {
           "description": "Header failures",
           "type": "cmd_read",
           "timer": 0,
-          "cmd": "/usr/local/bin/ip_reg -q -r 3"
+          "cmd": "/usr/sbin/ip_reg -q -r 3"
         },
         {
           "description": "CRC Errors",
           "type": "cmd_read",
           "timer": 0,
-          "cmd": "/usr/local/bin/ip_reg -q -r 4"
+          "cmd": "/usr/sbin/ip_reg -q -r 4"
         },
         {
           "description": "Packet Count",
           "type": "cmd_read",
           "timer": 0,
-          "cmd": "/usr/local/bin/ip_reg -q -r 5"
+          "cmd": "/usr/sbin/ip_reg -q -r 5"
         },
         {
           "description": "Last payload length",
           "type": "cmd_read",
           "timer": 0,
-          "cmd": "/usr/local/bin/ip_reg -q -r 6"
+          "cmd": "/usr/sbin/ip_reg -q -r 6"
         },
         {
           "description": "FRLoopBw",
@@ -720,7 +613,7 @@
           "min_value": 0,
           "cmd_read": "cat /tmp/ip_modem_reg_100",
           "cmd_read_timer": "read_once",
-          "cmd_write": "/usr/local/bin/ip_reg -q -f $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_100"
+          "cmd_write": "/usr/sbin/ip_reg -q -f $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_100"
         },
         {
           "description": "EQmu",
@@ -730,7 +623,7 @@
           "min_value": 0,
           "cmd_read": "cat /tmp/ip_modem_reg_104",
           "cmd_read_timer": "read_once",
-          "cmd_write": "/usr/local/bin/ip_reg -q -e $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_104"
+          "cmd_write": "/usr/sbin/ip_reg -q -e $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_104"
         },
         {
           "description": "Scope Select",
@@ -740,7 +633,7 @@
           "min_value": 0,
           "cmd_read": "cat /tmp/ip_modem_reg_108",
           "cmd_read_timer": "read_once",
-          "cmd_write": "/usr/local/bin/ip_reg -q -s $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_108"
+          "cmd_write": "/usr/sbin/ip_reg -q -s $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_108"
         },
         {
           "description": "Debug Select",
@@ -750,7 +643,7 @@
           "min_value": 0,
           "cmd_read": "cat /tmp/ip_modem_reg_10c",
           "cmd_read_timer": "read_once",
-          "cmd_write": "/usr/local/bin/ip_reg -q -d $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_10c"
+          "cmd_write": "/usr/sbin/ip_reg -q -d $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_10c"
         },
         {
           "description": "Tx DMA select",
@@ -760,7 +653,7 @@
           "min_value": 0,
           "cmd_read": "cat /tmp/ip_modem_reg_110",
           "cmd_read_timer": "read_once",
-          "cmd_write": "/usr/local/bin/ip_reg -q -t $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_110"
+          "cmd_write": "/usr/sbin/ip_reg -q -t $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_110"
         },
         {
           "description": "EQ Bypass",
@@ -770,7 +663,7 @@
           "min_value": 0,
           "cmd_read": "cat /tmp/ip_modem_reg_114",
           "cmd_read_timer": "read_once",
-          "cmd_write": "/usr/local/bin/ip_reg -q -b $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_114"
+          "cmd_write": "/usr/sbin/ip_reg -q -b $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_114"
         },
         {
           "description": "Rx Decode Enable",
@@ -780,7 +673,7 @@
           "min_value": 0,
           "cmd_read": "cat /tmp/ip_modem_reg_118",
           "cmd_read_timer": "read_once",
-          "cmd_write": "/usr/local/bin/ip_reg -q -p $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_118"
+          "cmd_write": "/usr/sbin/ip_reg -q -p $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_118"
         },
         {
           "description": "Packet Detection Threshold",
@@ -790,12 +683,12 @@
           "min_value": 0,
           "cmd_read": "cat /tmp/ip_modem_reg_11c",
           "cmd_read_timer": "read_once",
-          "cmd_write": "/usr/local/bin/ip_reg -q -z $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_11c"
+          "cmd_write": "/usr/sbin/ip_reg -q -z $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_11c"
         },
         {
           "description": "Send single packet",
           "type": "btn",
-          "cmd": "/usr/local/bin/ip_reg -q -1 1",
+          "cmd": "/usr/sbin/ip_reg -q -1 1",
           "background_task": true,
           "muted": false,
           "stylesheet": ""
@@ -808,7 +701,7 @@
           "min_value": 0,
           "cmd_read": "cat /tmp/ip_modem_reg_124",
           "cmd_read_timer": "read_once",
-          "cmd_write": "/usr/local/bin/ip_reg -q -A $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_124"
+          "cmd_write": "/usr/sbin/ip_reg -q -A $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_124"
         },
         {
           "description": "Set packet source",
@@ -818,7 +711,7 @@
           "min_value": 0,
           "cmd_read": "cat /tmp/ip_modem_reg_128",
           "cmd_read_timer": "read_once",
-          "cmd_write": "/usr/local/bin/ip_reg -q -S $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_128"
+          "cmd_write": "/usr/sbin/ip_reg -q -S $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_128"
         },
         {
           "description": "Enable internal IP loopback",
@@ -828,7 +721,7 @@
           "min_value": 0,
           "cmd_read": "cat /tmp/ip_modem_reg_12c",
           "cmd_read_timer": "read_once",
-          "cmd_write": "/usr/local/bin/ip_reg -q -L $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_12c"
+          "cmd_write": "/usr/sbin/ip_reg -q -L $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_12c"
         },
         {
           "description": "Enable encoding",
@@ -838,12 +731,12 @@
           "min_value": 0,
           "cmd_read": "cat /tmp/ip_modem_reg_130",
           "cmd_read_timer": "read_once",
-          "cmd_write": "/usr/local/bin/ip_reg -q -V $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_130"
+          "cmd_write": "/usr/sbin/ip_reg -q -V $EDIT_VAL;echo $EDIT_VAL > /tmp/ip_modem_reg_130"
         },
         {
           "description": "Set default",
           "type": "btn",
-          "cmd": "/usr/local/bin/ip_reg_default.sh",
+          "cmd": "/usr/sbin/ip_reg_default.sh",
           "background_task": true,
           "muted": false,
           "stylesheet": ""
@@ -852,14 +745,6 @@
     },
     "type": "list",
     "name": "Debug"
-  },
-  {
-    "params": {
-      "cmd": "(>&2 /usr/local/bin/configure_peer.sh )"
-    },
-    "type": "video",
-    "name": "Autoconfig",
-    "hang_on_finish": true
   },
   {
     "params": {
@@ -894,17 +779,17 @@
           "cmd": "cat /tmp/unamev"
         },
         {
-          "description": "Reboot",
+          "description": "Off Screen",
           "type": "btn",
-          "cmd": "reboot",
+          "cmd": "poweroff",
           "background_task": true,
           "muted": false,
           "stylesheet": ""
         },
         {
-          "description": "Shut down",
+          "description": "Reboot",
           "type": "btn",
-          "cmd": "poweroff",
+          "cmd": "reboot",
           "background_task": true,
           "muted": false,
           "stylesheet": ""

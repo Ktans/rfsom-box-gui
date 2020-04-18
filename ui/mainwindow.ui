@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>160</width>
+    <width>128</width>
     <height>128</height>
    </rect>
   </property>
@@ -46,7 +46,7 @@ color:white;
    </property>
    <property name="maximumSize">
     <size>
-     <width>160</width>
+     <width>128</width>
      <height>128</height>
     </size>
    </property>
@@ -106,7 +106,7 @@ color:white;
            </sizepolicy>
           </property>
           <property name="styleSheet">
-           <string notr="true">image: url(:/share/rfsom-box-gui/adi.png);</string>
+           <string notr="true">image: url(:/share/rfsom-box-gui/gridrf.png);</string>
           </property>
           <property name="text">
            <string/>
@@ -163,7 +163,7 @@ font: 9pt &quot;DejaVu Sans Mono&quot; white;
          <widget class="QListWidget" name="listWidget">
           <property name="maximumSize">
            <size>
-            <width>160</width>
+            <width>128</width>
             <height>128</height>
            </size>
           </property>

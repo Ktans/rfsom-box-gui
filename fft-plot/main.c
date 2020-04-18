@@ -47,7 +47,7 @@
 #define FFT_SIZE (8192)
 #define IIO_DEVICE_STR "cf-ad9361-lpc"
 #define ADC_SCALE ((double)(65535.0))
-#define X_RES 160
+#define X_RES 128
 #define Y_RES 128
 #define PIX_SCALE (int)(FFT_SIZE/(double)X_RES)
 
@@ -462,7 +462,7 @@ int main(int argc, char **argv)
 		draw_line(0,0,5,0,axis_color);
 		draw_line(0,0,0,127,axis_color);
 		draw_line(0,127,5,127,axis_color);
-		draw_text(" 0dB",2,2,axis_color);
+		//draw_text(" 0dB",2,2,axis_color);
 
 		switch (keypress) {
 		case KEY_Q:
@@ -503,21 +503,21 @@ int main(int argc, char **argv)
 		sprintf(buf, "-");
 		iio_channel_attr_read(rx1, "rssi", &buf[1], sizeof(buf) -1);
 		for (cnt=2; cnt <= 13; cnt++)
-			draw_line(80, cnt, X_RES - 1, cnt,0x00);
-		draw_text(buf,80,2, axis_color);
+			draw_line(20, cnt, X_RES - 1, cnt,0x00);
+		draw_text(buf,20,2, axis_color);
 
 		iio_channel_attr_read_double(rx1, "hardwaregain", &gain);
 		sprintf(buf, "%2.1f GAIN", gain);
 		for (cnt=14; cnt <= 26; cnt++)
-			draw_line(80, cnt, X_RES - 1, cnt,0x00);
-		draw_text(buf,80,14, axis_color);
+			draw_line(20, cnt, X_RES - 1, cnt,0x00);
+		draw_text(buf,20,14, axis_color);
 
-		draw_text("-140dB",2,112,axis_color);
+		//draw_text("-140dB",2,112,axis_color);
 
 		sprintf(buf, "%0.4f GHz", (double)lo/1e9 );
 		for (cnt=112; cnt <= 112 + 13; cnt++)
-			 draw_line(70, cnt, X_RES - 1, cnt,0x00);
-		draw_text(buf,70,112, axis_color);
+			 draw_line(20, cnt, X_RES - 1, cnt,0x00);
+		draw_text(buf,20,112, axis_color);
 
 		if (kbhit()) {
 			char c=fgetc(stdin);

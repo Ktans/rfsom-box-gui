@@ -1,7 +1,7 @@
 #ifndef BASIC_FONT_H
 #define BASIC_FONT_H
 #include <unistd.h>
-#define font_height 13
+#define font_height 12
 #define fontarray_offset 32
 #define fontarray_size 126
 const uint8_t font[127][13]= {
